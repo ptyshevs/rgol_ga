@@ -31,7 +31,7 @@ def make_move(field, moves=1):
 
 def generate_field(delta):
     field = np.random.randint(0, 2, size=(20, 20))
-    field = make_move(field, moves=5)
+    field = make_move(field, moves=delta)
     return field
 
 def generate_data_row(delta):
