@@ -1,6 +1,7 @@
 import numpy as np
 
 M = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+NROW = NCOL = 20
 
 def calc_neighs(field, i, j):
     neighs = 0
@@ -37,3 +38,34 @@ def generate_data_row(delta):
     start_field = generate_field(delta)
     end_field = make_move(start_field, delta)
     return np.hstack((np.array(delta).reshape(1, -1), start_field.reshape(1, -1), end_field.reshape(1, -1))).ravel()
+  
+def generate_sample(delta=1, skip_first=5, ravel=True):
+    """
+    Generate training sample
+    
+    @return: (end_frame, start_frame)
+    """
+    start_frame = generate_field(skip_first)
+    end_frame = make_move(start_frame, delta)
+    return (end_frame, start_frame) if not ravel else (end_frame.ravel(), start_frame.ravel())
+
+def generate_samples(delta=1, n=32):
+    """
+    Generate batch of samples
+    
+    @return: (end_frames, start_frames)
+    """
+    X = np.zeros((n, NROW * NCOL))
+    Y = np.zeros((n, NROW * NCOL))
+    for i in range(n):
+        x, y = generate_sample(delta)
+        X[i, :] = x
+        Y[i, :] = y
+    return X, Y
+
+def data_generator(delta=1, batch_size=32):
+    """
+    Can be used along with .fit_generator to generate training samples on the fly
+    """
+    while True:
+        yield generate_samples(delta=delta, n=batch_size)
