@@ -69,3 +69,73 @@ def data_generator(delta=1, batch_size=32):
     """
     while True:
         yield generate_samples(delta=delta, n=batch_size)
+
+def train_row_to_windowed_data(row):
+    delta, start_field, end_field = row[0], row[1:401].reshape(20, 20), row[401:].reshape(20, 20)
+    padded = np.pad(end_field, delta, mode="constant", constant_values=-1)
+    rows = []
+    labels = []
+    n = len(start_field)
+    for i in range(n):
+        for j in range(n):
+            window = padded[i:i+2*delta+1, j:j+2*delta+1]
+            cell_status = start_field[i][j]
+            rows.append(window.ravel())
+            labels.append(cell_status)
+    return (np.array(rows), np.array(labels).reshape(-1, 1))
+
+def extract_features_from_raw_data(raw_data):
+    X, y = [], []
+    for row_idx in range(raw_data.shape[0]):
+        field_X, field_y = train_row_to_windowed_data(raw_data[row_idx, :])
+        X.append(field_X)
+        y.append(field_y)
+    return np.vstack(X), np.vstack(y)
+
+def field_to_window_rows(end_field, delta):
+    padded = np.pad(end_field, delta, mode="constant", constant_values=-1)
+    rows = []
+    
+    n = len(end_field)
+    for i in range(n):
+        for j in range(n):
+            window = padded[i:i+2*delta+1, j:j+2*delta+1]
+            rows.append(window.ravel())
+    return np.array(rows)
+
+def predict_field(end_field, delta, model):
+
+    
+    rows = field_to_window_rows(end_field, delta)
+    
+    field = model.predict(rows)
+    return field
+
+def train_sample_windowize(field, delta=1, n=20):
+    """ Same as the above, but with custom delta """
+    padded = np.pad(field, delta, mode='constant', constant_values=-1)
+    X = np.zeros((n * n, (1 + delta * 2) ** 2))
+    for i in range(n):
+        for j in range(n):
+            X[i * n + j] = padded[i:i + 2 * delta + 1, j:j + 2 * delta + 1].ravel()
+    return X
+
+def window_data_proc(X, y=None, delta=1):
+    """ Reformat data in window form and prepare for training """
+    vectorize_windowing = lambda row: train_sample_windowize(row.reshape(20, 20), delta=delta)
+
+    X = np.vstack(np.apply_along_axis(vectorize_windowing, 1, X))
+    if y is not None:
+        y = np.vstack(y.ravel())
+        return X, y
+    return X
+
+# res = []
+# for row_idx in range(test_df.values.shape[0]):
+#     if row_idx % 1000 == 0:
+#         print(row_idx)
+#     row = test_df.values[row_idx, :]
+#     delta = row[0]
+#     field = row[1:].reshape(20, 20)
+#     pred = predict_field(field, delta, models_by_delta[delta])
+#     res.append(pred)
