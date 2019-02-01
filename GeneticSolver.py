@@ -3,20 +3,21 @@ from tools import generate_field, make_move
 
 
 class GeneticSolver:
-    def __init__(self, population_size=200, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
-                 verbose=False, random_state=-1, warm_start=False):
+    def __init__(self, population_size=200, n_generations=300, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
+                 verbosity=0, random_state=-1, warm_start=False):
         self.population_size = population_size
+        self.n_generations = n_generations
         self.retain_best = retain_best
         self.retain_random = retain_random
         self.mutate_chance = mutate_chance
-        self.verbose = verbose
+        self.verbosity = verbosity
         self.random_state = random_state
         self.warm_start = warm_start
         self._population = None
         if random_state != -1:
             np.random.seed(random_state)
 
-    def solve(self, Y, delta, n_generations=300):
+    def solve(self, Y, delta, n_generations=-1):
         """
 
         :param Y: end board (20 x 20 array)
@@ -24,15 +25,16 @@ class GeneticSolver:
         """
         if not (self._population and self.warm_start):
             self._population = self._generate_population()
-        for generation in range(n_generations):
+        if n_generations != -1:
+            self.n_generations = n_generations
+        for generation in range(self.n_generations):
             self._population, scores = self.evolve(Y, delta)
-            if self.verbose:
+            if self.verbosity:
                 if generation == 0:
                     print(f"Generation #: best score")
                 else:
                     print(f"Generation {generation}: {scores[0]}")
-        return self._population[0]
-
+        return self._population[0], scores[0]
 
     def _generate_population(self, strategy='uniform'):
         if strategy == 'uniform':
@@ -53,7 +55,7 @@ class GeneticSolver:
         sorted_indices = np.argsort(scores)[::-1]
         self._population = [self._population[idx] for idx in sorted_indices]
         best_scores = scores[sorted_indices][:retain_len]
-        if self.verbose:
+        if self.verbosity > 1:
             print("best scores:", best_scores)
         parents = self._population[:retain_len]
         leftovers = self._population[retain_len:]
@@ -63,7 +65,7 @@ class GeneticSolver:
             if np.random.rand() < self.retain_random:
                 cnt_degenerate += 1
                 parents.append(gene)
-        if self.verbose:
+        if self.verbosity > 1:
             print(f"# of degenerates left: {cnt_degenerate}")
 
         cnt_mutations = 0
@@ -71,7 +73,7 @@ class GeneticSolver:
             if np.random.rand() < self.mutate_chance:
                 self.mutate(gene)
                 cnt_mutations += 1
-        if self.verbose:
+        if self.verbosity > 1:
             print(f"# of mutations: {cnt_mutations}")
 
         places_left = self.population_size - retain_len
@@ -83,7 +85,7 @@ class GeneticSolver:
                 children.append(child1)
                 if len(children) < places_left:
                     children.append(child2)
-        if self.verbose:
+        if self.verbosity > 1:
             print(f"# of children: {len(children)}")
         parents.extend(children)
         return parents, best_scores
