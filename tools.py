@@ -18,7 +18,7 @@ def make_move(field, moves=1):
     n = len(field)
     cur_field = field
     for _ in range(moves):
-        new_field = np.zeros((n, n), dtype=int)
+        new_field = np.zeros((n, n), dtype='uint8')
         for i in range(n):
             for j in range(n):
                 neighs = calc_neighs(cur_field, i, j)
@@ -29,8 +29,8 @@ def make_move(field, moves=1):
         cur_field = new_field
     return cur_field
 
-def generate_field(delta):
-    field = np.random.randint(0, 2, size=(20, 20))
+def generate_field(delta, flat=False):
+    field = np.random.randint(0, 2, size=(20, 20), dtype='uint8')
     field = make_move(field, moves=delta)
     return field
 
