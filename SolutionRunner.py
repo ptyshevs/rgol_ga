@@ -11,7 +11,7 @@ class SolutionRunner:
     self.n = 0
   
   
-  def solve_df(self, df, save_to=None):
+  def solve_df(self, df, first_n=None, save_to=None):
     solver = MPGeneticSolver(early_stopping=False)
     
     solution_df = pd.DataFrame([], columns=['id', 'score'] + ['start.'+ str(_) for _ in range(1, 401)], dtype=int)
@@ -24,7 +24,7 @@ class SolutionRunner:
     best, worst = None, None
     for id, (idx, row) in zip(df.index, df.iterrows()):
         delta, Y = row.values[0], row.values[1:].reshape((20, 20)).astype('uint8')
-        solution = mpgs.solve(Y, delta, return_all=False)
+        solution = solver.solve(Y, delta, return_all=False)
 
         board, score = solution
         flat_board = np.insert(board.ravel(), 0, id)
@@ -36,10 +36,12 @@ class SolutionRunner:
             best = (idx, score)
         if worst is None or worst[1] > score:
             worst = (idx, score)
-        n += 1
-        running_avg = (running_avg * (n - 1) + score) / n
+        self.n += 1
+        self.running_avg = (self.running_avg * (self.n - 1) + score) / self.n
         if self.verbosity:
           print(f"{idx} is solved with score {score}. Average score: {running_avg}")
+        if first_n and idx >= first_n:
+          break
     if self.verbosity:
       print("Best score:", best)
       print("Worst score:", worst)

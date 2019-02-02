@@ -2,7 +2,6 @@ import pyximport
 pyximport.install(language_level=3)
 import life
 import numpy as np
-from tools import generate_field
 import multiprocessing as mp
 from functools import partial
 
