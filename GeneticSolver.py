@@ -1,16 +1,19 @@
+import pyximport
+pyximport.install(language_level=3)
+import life
 import numpy as np
-from tools import generate_field, make_move
+from tools import generate_field
 import multiprocessing as mp
 from functools import partial
 
       
 def parallel_fitness(gene, Y, delta):
-    candidate = make_move(gene, moves=delta)
+    candidate = life.make_move(gene, moves=delta)
     return (candidate == Y).sum() / 400
 
 class GeneticSolver:
-    def __init__(self, population_size=200, n_generations=300, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
-                 verbosity=0, random_state=-1, warm_start=False, early_stopping=True, patience=20,
+    def __init__(self, population_size=800, n_generations=2000, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
+                 verbosity=0, verbosity_step=20, random_state=-1, warm_start=False, early_stopping=True, patience=20,
                  initialization_strategy='uniform', fitness_parallel=False):
         """
         :param population_size: number of individual candidate solutions
@@ -31,6 +34,7 @@ class GeneticSolver:
         self.retain_random = retain_random
         self.mutate_chance = mutate_chance
         self.verbosity = verbosity
+        self.verbosity_step = verbosity_step
         self.random_state = random_state
         self.warm_start = warm_start
         self.early_stopping = early_stopping
@@ -41,7 +45,6 @@ class GeneticSolver:
             self.pool = mp.Pool(mp.cpu_count())
         else:
             self.pool = None
-       
 
         self._population = None
         if random_state != -1:
@@ -69,12 +72,12 @@ class GeneticSolver:
             else:
                 cnt_no_change_in_scores = 0
                 prev_scores = scores
-            if self.verbosity:
+            if self.verbosity and generation % self.verbosity_step == 0:
                 if generation == 0:
                     print(f"Generation #: best score")
                 else:
                     print(f"Generation {generation}: {scores[0]}")
-            if self.early_stopping and cnt_no_change_in_scores >= self.patience:
+            if np.isclose(scores[:10], 1).any() or (self.early_stopping and cnt_no_change_in_scores >= self.patience):
                 if self.verbosity:
                     print(f"Early stopping on generation {generation} with best score {scores[0]}")
                 break
@@ -95,11 +98,12 @@ class GeneticSolver:
         :return: initial population as a list of 20x20 arrays
         """
         if self.initialization_strategy == 'uniform':
-            return [generate_field(5) for _ in range(self.population_size)]
+            initial_states = np.split(np.random.binomial(1, 0.5, (20 * self.population_size, 20)).astype('uint8'), self.population_size)
+            return [life.make_move(state, 5) for state in initial_states]
         elif self.initialization_strategy == 'covering':
             """ Idea is to cover all the range of possible values for 'density' parameter """
             alive_probabilities = np.linspace(0.01, 0.99, self.population_size)
-            return [make_move(np.random.binomial(1, prob, size=(20, 20)), moves=5) for prob in alive_probabilities]
+            return [life.make_move(np.random.binomial(1, prob, size=(20, 20)), moves=5) for prob in alive_probabilities]
         else:
             raise NotImplementedError(f"{self.initialization_strategy} is not implemented!")
 
@@ -184,7 +188,7 @@ class GeneticSolver:
         :param delta: number of steps to proceed before comparing to stop configuration
         :return: value in range [0, 1] that indicates fractions of cells that match their state
         """
-        candidate = make_move(start_field, moves=delta)
+        candidate = life.make_move(start_field, moves=delta)
         return (candidate == end_field).sum() / 400
 
       

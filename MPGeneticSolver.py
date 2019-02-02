@@ -39,8 +39,6 @@ class MPGeneticSolver:
         self._solvers = [GeneticSolver(*self.args, **self.kwargs) for _ in range(self.n_proc)]
         tasks = [(solver, Y, delta) for solver in self._solvers]
         results = self.pool.starmap(work, tasks)
-        self.pool.close()
-        self.pool.join()
         return results if return_all else self.select_best(results)
 
     @classmethod
@@ -50,7 +48,7 @@ class MPGeneticSolver:
         :param solutions: list of (solution, score) pairs
         :return: 20x20 array that represents the solution (starting board condition)
         """
-        return sorted(solutions, key=lambda x:x[1], reverse=True)[0][0]
+        return sorted(solutions, key=lambda x:x[1], reverse=True)[0]
 
 
 if __name__ == '__main__':
