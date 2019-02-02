@@ -1,12 +1,18 @@
 import numpy as np
 from tools import generate_field, make_move
 import multiprocessing as mp
+from functools import partial
 
+      
+def parallel_fitness(gene, Y, delta):
+    candidate = make_move(gene, moves=delta)
+    return (candidate == Y).sum() / 400
 
 class GeneticSolver:
+    pool = mp.Pool(mp.cpu_count())
     def __init__(self, population_size=200, n_generations=300, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
                  verbosity=0, random_state=-1, warm_start=False, early_stopping=True, patience=20,
-                 initialization_strategy='uniform'):
+                 initialization_strategy='uniform', fitness_parallel=True):
         """
 
         :param population_size: number of individual candidate solutions
@@ -32,7 +38,8 @@ class GeneticSolver:
         self.early_stopping = early_stopping
         self.patience = patience
         self.initialization_strategy = initialization_strategy
-        self.pool = mp.Pool(mp.cpu_count())
+        self.fitness_parallel = fitness_parallel
+       
 
         self._population = None
         if random_state != -1:
@@ -101,7 +108,10 @@ class GeneticSolver:
         :param delta: number of steps to revert
         :return: new generation of the same size along with scores of the best retained individuals
         """
-        scores = np.array(self.score_population(self._population, Y, delta))
+        if self.fitness_parallel:
+          scores = np.array(self.parallel_score_population(self._population, Y, delta))
+        else:
+          scores = np.array(self.score_population(self._population, Y, delta))
         retain_len = int(len(scores) * self.retain_best)
         sorted_indices = np.argsort(scores)[::-1]
         self._population = [self._population[idx] for idx in sorted_indices]
@@ -175,6 +185,7 @@ class GeneticSolver:
         candidate = make_move(start_field, moves=delta)
         return (candidate == end_field).sum() / 400
 
+      
     @classmethod
     def score_population(cls, population, Y, delta):
         """
@@ -184,8 +195,18 @@ class GeneticSolver:
         :param delta: number of steps to revert
         :return: list of scores for each solution
         """
-        f = lambda gene: cls.fitness(gene, Y, delta)
-        return cls.pool.starmap(f, population)
+        return [cls.fitness(gene, Y, delta) for gene in population]
+
+    @classmethod
+    def parallel_score_population(cls, population, Y, delta):
+        """
+        Apply fitness function for each gene in a population in parallel
+        :param population: list of candidate solutions
+        :param Y: 20x20 array that represents field in stopping condition
+        :param delta: number of steps to revert
+        :return: list of scores for each solution
+        """
+        return cls.pool.map(partial(parallel_fitness, Y=Y, delta=delta), population)
 
 if __name__ == '__main__':
     print(GeneticSolver.fitness())
