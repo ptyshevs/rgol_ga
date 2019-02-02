@@ -24,6 +24,8 @@ class MPGeneticSolver:
         self.args = args
         self.kwargs = kwargs
         self._solvers = None
+        if 'fitness_parallel' in self.args or ('fitness_parallel' in self.kwargs and self.kwargs['fitness_parallel']):
+            raise ValueError("Fitness function cannot be parallelized in MPGeneticSolver")
 
     def solve(self, Y, delta, return_all=True):
         """

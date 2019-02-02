@@ -9,12 +9,10 @@ def parallel_fitness(gene, Y, delta):
     return (candidate == Y).sum() / 400
 
 class GeneticSolver:
-    pool = mp.Pool(mp.cpu_count())
     def __init__(self, population_size=200, n_generations=300, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
                  verbosity=0, random_state=-1, warm_start=False, early_stopping=True, patience=20,
-                 initialization_strategy='uniform', fitness_parallel=True):
+                 initialization_strategy='uniform', fitness_parallel=False):
         """
-
         :param population_size: number of individual candidate solutions
         :param n_generations: number of generations
         :param retain_best: percentage of best candidates to select into the next generation
@@ -39,6 +37,10 @@ class GeneticSolver:
         self.patience = patience
         self.initialization_strategy = initialization_strategy
         self.fitness_parallel = fitness_parallel
+        if fitness_parallel:
+            self.pool = mp.Pool(mp.cpu_count())
+        else:
+            self.pool = None
        
 
         self._population = None
@@ -197,8 +199,7 @@ class GeneticSolver:
         """
         return [cls.fitness(gene, Y, delta) for gene in population]
 
-    @classmethod
-    def parallel_score_population(cls, population, Y, delta):
+    def parallel_score_population(self, population, Y, delta):
         """
         Apply fitness function for each gene in a population in parallel
         :param population: list of candidate solutions
@@ -206,7 +207,7 @@ class GeneticSolver:
         :param delta: number of steps to revert
         :return: list of scores for each solution
         """
-        return cls.pool.map(partial(parallel_fitness, Y=Y, delta=delta), population)
+        return self.pool.map(partial(parallel_fitness, Y=Y, delta=delta), population)
 
 if __name__ == '__main__':
     print(GeneticSolver.fitness())
