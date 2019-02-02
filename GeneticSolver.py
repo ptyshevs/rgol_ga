@@ -1,5 +1,6 @@
 import numpy as np
 from tools import generate_field, make_move
+import multiprocessing as mp
 
 
 class GeneticSolver:
@@ -31,6 +32,7 @@ class GeneticSolver:
         self.early_stopping = early_stopping
         self.patience = patience
         self.initialization_strategy = initialization_strategy
+        self.pool = mp.Pool(mp.cpu_count())
 
         self._population = None
         if random_state != -1:
@@ -182,7 +184,8 @@ class GeneticSolver:
         :param delta: number of steps to revert
         :return: list of scores for each solution
         """
-        return [cls.fitness(gene, Y, delta) for gene in population]
+        f = lambda gene: cls.fitness(gene, Y, delta)
+        return cls.pool.starmap(f, population)
 
 if __name__ == '__main__':
     print(GeneticSolver.fitness())
