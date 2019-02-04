@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from MPGeneticSolver import MPGeneticSolver
 
+
 class SolutionRunner:
   def __init__(self, save_fname='solution.csv', verbosity=0):
     self.save_fname = save_fname
@@ -9,8 +10,7 @@ class SolutionRunner:
     self.log = []
     self.running_avg = 0
     self.n = 0
-  
-  
+
   def solve_df(self, df, first_n=None, save_to=None):
     solver = MPGeneticSolver(early_stopping=False)
     
@@ -22,7 +22,7 @@ class SolutionRunner:
     self.n = 0
     self.log = []
     best, worst = None, None
-    for id, (idx, row) in zip(df.index, df.iterrows()):
+    for i, (id, (idx, row)) in enumerate(zip(df.index, df.iterrows())):
         delta, Y = row.values[0], row.values[1:].reshape((20, 20)).astype('uint8')
         solution = solver.solve(Y, delta, return_all=False)
 
@@ -39,12 +39,14 @@ class SolutionRunner:
         self.n += 1
         self.running_avg = (self.running_avg * (self.n - 1) + score) / self.n
         if self.verbosity:
-          print(f"{idx} is solved with score {score}. Average score: {running_avg}")
-        if first_n and idx >= first_n:
+          print(f"{idx} is solved with score {score}. Average score: {self.running_avg}")
+        if first_n and i >= first_n:
           break
     if self.verbosity:
       print("Best score:", best)
       print("Worst score:", worst)
     if save_to is not None:
       solution_df.to_csv(save_to)
+    else:
+      solution_df.to_csv(self.save_fname)
     return solution_df
