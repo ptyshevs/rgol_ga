@@ -52,4 +52,4 @@ class MPGeneticSolver:
 
 
 if __name__ == '__main__':
-    print(f"Registered number of cores: {mp.cpu_count()}")
+    print("Registered number of cores: ", mp.cpu_count())

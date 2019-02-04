@@ -73,12 +73,12 @@ class GeneticSolver:
                 prev_scores = scores
             if self.verbosity and generation % self.verbosity_step == 0:
                 if generation == 0:
-                    print(f"Generation #: best score")
+                    print("Generation #: best score")
                 else:
-                    print(f"Generation {generation}: {scores[0]}")
+                    print("Generation ",generation,": ",scores[0])
             if np.isclose(scores[:10], 1).any() or (self.early_stopping and cnt_no_change_in_scores >= self.patience):
                 if self.verbosity:
-                    print(f"Early stopping on generation {generation} with best score {scores[0]}")
+                    print("Early stopping on generation ",generation, " with best score ", scores[0])
                 break
         return self._population[0], scores[0]
 
@@ -104,7 +104,7 @@ class GeneticSolver:
             alive_probabilities = np.linspace(0.01, 0.99, self.population_size)
             return [life.make_move(np.random.binomial(1, prob, size=(20, 20)), moves=5) for prob in alive_probabilities]
         else:
-            raise NotImplementedError(f"{self.initialization_strategy} is not implemented!")
+            raise NotImplementedError(self.initialization_strategy + " is not implemented!")
 
     def evolve(self, Y, delta):
         """
@@ -132,7 +132,7 @@ class GeneticSolver:
                 cnt_degenerate += 1
                 parents.append(gene)
         if self.verbosity > 1:
-            print(f"# of degenerates left: {cnt_degenerate}")
+            print("# of degenerates left: ", cnt_degenerate)
 
         cnt_mutations = 0
         for gene in parents[1:]:  # mutate everyone expecting for the best candidate
@@ -140,7 +140,7 @@ class GeneticSolver:
                 self.mutate(gene)
                 cnt_mutations += 1
         if self.verbosity > 1:
-            print(f"# of mutations: {cnt_mutations}")
+            print("# of mutations: ", cnt_mutations)
 
         places_left = self.population_size - retain_len
         children = []
@@ -152,7 +152,7 @@ class GeneticSolver:
                 if len(children) < places_left:
                     children.append(child2)
         if self.verbosity > 1:
-            print(f"# of children: {len(children)}")
+            print("# of children: ", len(children))
         parents.extend(children)
         return parents, best_scores
 

@@ -39,7 +39,7 @@ class SolutionRunner:
         self.n += 1
         self.running_avg = (self.running_avg * (self.n - 1) + score) / self.n
         if self.verbosity:
-          print(f"{idx} is solved with score {score}. Average score: {self.running_avg}")
+          print(idx, " is solved with score ", score,". Average score: ", self.running_avg)
         if first_n and i >= first_n:
           break
     if self.verbosity:
