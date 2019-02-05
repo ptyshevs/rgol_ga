@@ -8,24 +8,28 @@ import numpy as np
 cdef int calc_neighs(unsigned char[:, :] field, int i, int j, int n):
     cdef:
         int neighs = 0;
+        int i_min = i - 1;
+        int i_pl = i + 1;
+        int j_min = j - 1;
+        int j_pl = j + 1;
         int k, row_idx, col_idx;
     neighs = 0
-    if i - 1 >= 0 and j - 1 >= 0 and field[i - 1, j - 1]:
-        neighs += 1
-    if i - 1 >= 0 and field[i - 1, j]:
-        neighs += 1
-    if i - 1 >= 0 and j + 1 < n and field[i - 1, j + 1]:
-        neighs += 1
-    if j - 1 >= 0 and field[i, j - 1]:
-        neighs += 1
-    if j + 1 < n and field[i, j + 1]:
-        neighs += 1
-    if i + 1 < n and j - 1 >= 0 and field[i + 1, j - 1]:
-        neighs += 1
-    if i + 1 < n and field[i + 1, j]:
-        neighs += 1
-    if i + 1 < n and j + 1 < n and field[i + 1, j + 1]:
-        neighs += 1
+    if i_min >= 0:
+        if j_min >= 0:
+            neighs += field[i_min, j_min]
+        neighs += field[i_min, j]
+        if j_pl < n:
+            neighs += field[i_min, j_pl]
+    if j_min >= 0:
+        neighs += field[i, j_min]
+    if j_pl < n:
+        neighs += field[i, j_pl]
+    if i + 1 < n:
+        if j_min >= 0:
+            neighs += field[i_pl, j_min]
+        neighs += field[i_pl, j]
+        if j_pl < n:
+            neighs += field[i_pl, j_pl]
     return neighs
 
 @cython.cdivision(True)

@@ -12,7 +12,7 @@ def parallel_fitness(gene, Y, delta):
 
 class GeneticSolver:
     def __init__(self, population_size=800, n_generations=2000, retain_best=0.8, retain_random=0.05, mutate_chance=0.05,
-                 verbosity=0, verbosity_step=20, random_state=-1, warm_start=False, early_stopping=True, patience=20,
+                 verbosity=0, verbosity_step=50, random_state=-1, warm_start=False, early_stopping=True, patience=20,
                  initialization_strategy='uniform', fitness_parallel=False):
         """
         :param population_size: number of individual candidate solutions
@@ -20,12 +20,15 @@ class GeneticSolver:
         :param retain_best: percentage of best candidates to select into the next generation
         :param retain_random: probability of selecting sub-optimal candidate into the next generation
         :param mutate_chance: candidate mutation chance
-        :param verbosity: level of verbosity (0 - quiet, 1 - evolution information, 2 - spamming like in 2003)
+        :param verbosity: level of verbosity (0 - quiet, 1 - evolution information, 2 - spamming like it's 2003)
+        :param verbosity_step: number of generations to process before showing the best score
         :param random_state: if specified, initializes seed with this value
         :param warm_start: if True, initial population generation step is omitted, allowing for continuing training
         :param early_stopping: if True, evolution will stop if top-10 candidates are not changing for several generations
         :param patience: number of generations to wait for best solution change when <early_stopping>
         :param initialization_strategy: initial population generation rule: 'uniform' or 'covering'
+        :param fitness_parallel: if True, scoring is performed on multiple cores, greatly improving the performance.
+                                 Don't use with MPGeneticSolver! (results in deadlock)
         """
         self.population_size = population_size
         self.n_generations = n_generations
