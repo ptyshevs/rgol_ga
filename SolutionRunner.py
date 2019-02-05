@@ -23,6 +23,7 @@ class SolutionRunner:
     self.log = []
     best, worst = None, None
     for i, (id, (idx, row)) in enumerate(zip(df.index, df.iterrows())):
+        f = open('/tmp/test-unstructured-log.log', 'a+')
         delta, Y = row.values[0], row.values[1:].reshape((20, 20)).astype('uint8')
         solution = solver.solve(Y, delta, return_all=False)
 
@@ -39,12 +40,15 @@ class SolutionRunner:
         self.n += 1
         self.running_avg = (self.running_avg * (self.n - 1) + score) / self.n
         if self.verbosity:
-          print(idx, " is solved with score ", score,". Average score: ", self.running_avg)
+          print(idx, " is solved with score ", score,". Average score: ", self.running_avg, file=f)
         if first_n and i >= first_n:
           break
+        f.close()
     if self.verbosity:
-      print("Best score:", best)
-      print("Worst score:", worst)
+      f = open('/tmp/test-unstructured-log.log', 'a+')
+      print("Best score:", best, file=f)
+      print("Worst score:", worst, file=f)
+      f.close()
     if save_to is not None:
       solution_df.to_csv(save_to)
     else:
