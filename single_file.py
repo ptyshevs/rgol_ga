@@ -1,4 +1,4 @@
-#! /home/ptyshevs/rgol_ga/ga_env/bin/python3
+#! /home/pn4vin/rgol_ga/ga_env/bin/python3
 import pandas as pd
 import numpy as np
 from SolutionRunner import SolutionRunner
