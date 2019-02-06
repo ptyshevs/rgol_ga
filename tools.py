@@ -129,13 +129,3 @@ def window_data_proc(X, y=None, delta=1):
         y = np.vstack(y.ravel())
         return X, y
     return X
-
-# res = []
-# for row_idx in range(test_df.values.shape[0]):
-#     if row_idx % 1000 == 0:
-#         print(row_idx)
-#     row = test_df.values[row_idx, :]
-#     delta = row[0]
-#     field = row[1:].reshape(20, 20)
-#     pred = predict_field(field, delta, models_by_delta[delta])
-#     res.append(pred)
