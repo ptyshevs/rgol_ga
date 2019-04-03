@@ -1,4 +1,5 @@
 import numpy as np
+from life import make_move
 
 M = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
 NROW = NCOL = 20
