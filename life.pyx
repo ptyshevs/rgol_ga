@@ -69,3 +69,10 @@ cpdef make_move(unsigned char[:, :] field, int moves):
                         cur_field[i, j] = 0
         switch = (switch + 1) % 2
     return np.array(next_field if switch else cur_field)
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
+@cython.nonecheck(False)
+@cython.wraparound(False)
+cpdef float fitness_score(unsigned char[:, :] gene, unsigned char[:, :]Y, int delta):
+    return (make_move(gene, moves=delta) == Y).sum() / 400.0

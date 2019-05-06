@@ -99,15 +99,19 @@ class GeneticSolver:
                        on average higher initial fitness score, but has no observed effect on long-term behavior
         :return: initial population as a list of 20x20 arrays
         """
-        if self.initialization_strategy == 'uniform':
-            initial_states = np.split(np.random.binomial(1, 0.5, (20 * self.population_size, 20)).astype('uint8'), self.population_size)
-            return [life.make_move(state, 5) for state in initial_states]
-        elif self.initialization_strategy == 'covering':
-            """ Idea is to cover all the range of possible values for 'density' parameter """
-            alive_probabilities = np.linspace(0.01, 0.99, self.population_size)
-            return [life.make_move(np.random.binomial(1, prob, size=(20, 20)), moves=5) for prob in alive_probabilities]
+        if type(self.initialization_strategy) is str:
+            if self.initialization_strategy == 'uniform':
+                initial_states = np.split(np.random.binomial(1, 0.5, (20 * self.population_size, 20)).astype('uint8'), self.population_size)
+                return [life.make_move(state, 5) for state in initial_states]
+            elif self.initialization_strategy == 'covering':
+                """ Idea is to cover all the range of possible values for 'density' parameter """
+                alive_probabilities = np.linspace(0.01, 0.99, self.population_size)
+                return [life.make_move(np.random.binomial(1, prob, size=(20, 20)), moves=5) for prob in alive_probabilities]
+            else:
+                raise NotImplementedError(self.initialization_strategy + " is not implemented!")
         else:
-            raise NotImplementedError(self.initialization_strategy + " is not implemented!")
+            """Assume initialization based on individual, just copy it over"""
+            return [np.copy(self.initialization_strategy).reshape((20, 20)).astype('uint8') for i in range(self.population_size)]
 
     def evolve(self, Y, delta):
         """
@@ -185,6 +189,7 @@ class GeneticSolver:
     def fitness(cls, start_field, end_field, delta):
         """
         Calculate fitness for particular candidate (start configuration of the field)
+        Currently unused, as fitness scoring was implemented directly into Cython `life` module.
         :param start_field: candidate (start configuration)
         :param end_field: target (stop configuration)
         :param delta: number of steps to proceed before comparing to stop configuration
@@ -203,7 +208,7 @@ class GeneticSolver:
         :param delta: number of steps to revert
         :return: list of scores for each solution
         """
-        return [cls.fitness(gene, Y, delta) for gene in population]
+        return [life.fitness_score(gene, Y, delta) for gene in population]
 
     def parallel_score_population(self, population, Y, delta):
         """
