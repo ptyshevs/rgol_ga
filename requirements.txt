@@ -1,0 +1,4 @@
+cython
+matplotlib
+numpy
+scipy
